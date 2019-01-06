@@ -64,7 +64,7 @@ class Resnet:
                         kernel_initializer=kernel_initializer, bias_initializer=bias_initializer,
                         kernel_regularizer=kernel_regularizer, bias_regularizer=bias_regularizer, use_bias=True)
                 prev_1d = tf.add(conv_1d, prev_1d)
-            
+
         #prev_1d = act(prev_1d)
         logits = tf.layers.conv1d(inputs=prev_1d, filters=self.model_config['1d_label_size'],
                 kernel_size=kernel_size_1d, strides=1, padding='same',
@@ -112,7 +112,7 @@ class Resnet:
                         kernel_initializer=kernel_initializer, bias_initializer=bias_initializer,
                         kernel_regularizer=kernel_regularizer, bias_regularizer=bias_regularizer, use_bias=True)
                 prev_1d = tf.add(conv_1d, prev_1d)
-            
+
             out_1d = tf.expand_dims(prev_1d, axis=3)
             ones = tf.ones((1, PADDING_FULL_LEN))
             left_1d = tf.einsum('abcd,de->abce', out_1d, ones)
@@ -120,7 +120,7 @@ class Resnet:
             right_1d = tf.transpose(left_1d, perm=[0,2,1,3])
 
             input_2d = tf.concat([x2d, left_1d, right_1d], axis=3)
-            
+
             prev_2d = tf.layers.conv2d(inputs=input_2d, filters=filters_2d,
                     kernel_size=kernel_size_2d, strides=(1,1), padding='same',
                     kernel_initializer=kernel_initializer, bias_initializer=bias_initializer,
@@ -137,7 +137,7 @@ class Resnet:
                     kernel_initializer=kernel_initializer, bias_initializer=bias_initializer,
                     kernel_regularizer=kernel_regularizer, bias_regularizer=bias_regularizer, use_bias=True)
                 prev_2d =  tf.add(conv_2d, prev_2d)
-                
+
             logits = tf.layers.conv2d(inputs=prev_2d, filters=self.model_config['2d_label_size'],
                     kernel_size=kernel_size_2d, strides=(1,1), padding='same',
                     kernel_initializer=kernel_initializer, bias_initializer=bias_initializer,
@@ -146,7 +146,7 @@ class Resnet:
             #logits_tran = tf.transpose(logits, perm=[0, 2, 1, 3])
             #logits = (logits + logits_tran) / 2.0
             return logits
-    
+
     def resn_mrf(self, x1d, x2d, y1d, reuse=False):
         with tf.variable_scope('resn_1d_2d', reuse=reuse) as scope:
             act = tf.nn.relu
@@ -197,7 +197,7 @@ class Resnet:
             left_1d = tf.transpose(left_1d, perm=[0,1,3,2])
             right_1d = tf.transpose(left_1d, perm=[0,2,1,3])
             input_2d = tf.concat([x2d, left_1d, right_1d], axis=3)
-            
+
             prev_2d = tf.layers.conv2d(inputs=input_2d, filters=filters_2d,
                     kernel_size=kernel_size_2d, strides=(1,1), padding='same',
                     kernel_initializer=kernel_initializer, bias_initializer=bias_initializer,
@@ -215,7 +215,7 @@ class Resnet:
                     kernel_initializer=kernel_initializer, bias_initializer=bias_initializer,
                     kernel_regularizer=kernel_regularizer, bias_regularizer=bias_regularizer, use_bias=True)
                 prev_2d =  tf.add(conv_2d, prev_2d)
-     
+
             #logits = tf.layers.conv2d(inputs=prev_2d, filters=self.model_config['2d_label_size'],
             logits_2d = tf.layers.conv2d(inputs=prev_2d, filters=19*19,
                     kernel_size=kernel_size_2d, strides=(1,1), padding='same',
@@ -226,6 +226,7 @@ class Resnet:
             logits_2d_sym=tf.transpose(logits_2d, perm=[0,2,1,4,3])
             logits_2d = 0.5 * (logits_2d + logits_2d_sym)
 
+            #MRF part
             #hot_encode = tf.one_hot(tf.cast(y1d, tf.int32), depth=self.model_config['1d_label_size'])
             hot_encode = tf.one_hot(tf.cast(y1d, tf.int32), depth=19)
             hot_encode_e = tf.expand_dims(hot_encode, axis=2)
@@ -299,13 +300,13 @@ class Resnet:
         acc_ = np.mean(np.array(acc))
         logging.info('{:s} total= {} 1d_acc= {}'.format(mode, total, acc_))
         return
-    
+
     def evaluate2d(self, mode, epoch):
         self.sess.run(self.iterator.initializer,\
                 feed_dict={self.input_tfrecord_files:self.dataset.get_chunks(mode)})
         acc = []
         total = 0
-        
+
         save_dir = '{}/pred_{}'.format(self.train_config.out_pred_dir, epoch)
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -327,7 +328,7 @@ class Resnet:
                 feed_dict={self.input_tfrecord_files:self.dataset.get_chunks(mode)})
         acc = []
         total = 0
-        
+
         save_dir = '{}/pred_{}'.format(self.train_config.out_pred_dir, epoch)
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -385,7 +386,7 @@ class Resnet:
                     padded_shapes=(
                         [PADDING_FULL_LEN, self.x1d_channel_dim],
                         [PADDING_FULL_LEN, PADDING_FULL_LEN, self.x2d_channel_dim],
-                        [PADDING_FULL_LEN, 1], 
+                        [PADDING_FULL_LEN, 1],
                         [PADDING_FULL_LEN, PADDING_FULL_LEN],
                         [],[]),
                     padding_values=(0.0, 0.0, np.int16(-1), np.int16(-1), np.int64(PADDING_FULL_LEN), ""))
@@ -432,7 +433,7 @@ class Resnet:
             if self.train_config.mrf_reg > 0.0:
                 mrf_1d_reg = tf.reduce_mean(tf.reduce_sum(tf.square(self.mrf_1d),axis=[1,2]))
                 mrf_2d_reg = tf.reduce_mean(tf.reduce_sum(tf.square(self.mrf_2d),axis=[1,2,3,4]))
-                mrf_reg_loss = mrf_1d_reg + mrf_2d_reg 
+                mrf_reg_loss = mrf_1d_reg + mrf_2d_reg
                 self.loss += self.train_config.mrf_reg * mrf_reg_loss
 
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)#for batch normalization
@@ -491,7 +492,7 @@ class Resnet:
             else:
                 logging.info('Epoch= {:d} train loss= {:.4f} log_loss= {:.4f} reg_loss= {:.4f}'.format(
                     epoch, train_loss / n, train_log_loss/n, train_reg_loss/n))
-            
+
             if self.train_config.model_type == 'resn1d':
                 self.evaluate1d('val')
                 self.evaluate1d('casp12')

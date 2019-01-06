@@ -128,11 +128,12 @@ class Resnet:
             #logits_2d_sym=tf.transpose(logits_2d, perm=[0,2,1,4,3])
             #logits_2d = 0.5 * (logits_2d + logits_2d_sym)
 
+            #MRF part
             hot_encode = tf.one_hot(tf.cast(y1d, tf.int32), depth=19)
             hot_encode_e = tf.expand_dims(hot_encode, axis=2)
             #?, 500, 1, 20
             ones = tf.ones((1, tf.shape(x1d)[1]))
-            #v0each row is the same; each row for all the positions and hot-encode for each position
+            #v0, all rows are same
             v0=tf.einsum('DieB,ej->DjiB', hot_encode_e, ones)
             v1=tf.expand_dims(v0, axis=-1)
             v2=tf.matmul(logits_2d, v1)
