@@ -1,0 +1,17 @@
+{
+    "1d":{
+        "filters":64,
+        "kernel_size":3,
+        "block_num":16,
+        "channel_dim":15
+    },
+    "2d":{
+        "filters":64,
+        "kernel_size":3,
+        "block_num":16,
+        "channel_dim":4
+    },
+    "2d_label_size":400,
+    "1d_label_size":20,
+    "block_type":"regular"
+}

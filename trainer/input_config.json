@@ -1,0 +1,7 @@
+{
+    "train":"/data/hz2529/data/missense/protein/tf6_nocle/train",
+    "test":{
+        "casp12":"/data/hz2529/data/missense/protein/tf6_nocle/casp12_nobroken",
+        "cameo":"/data/hz2529/data/missense/protein/tf6_nocle/cameo"
+    }
+}
