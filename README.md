@@ -3,4 +3,4 @@ DeepMRF is a hybrid model of deep neural network and Markov Random Field for pro
 
 
 ## Citation
-Haicang Zhang, Sheng Wang. We are busy in other projects and will write up the manscript in near future.
+We are busy in other projects and will write up the manscript in near future.
